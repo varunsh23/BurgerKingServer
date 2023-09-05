@@ -10,11 +10,12 @@ import { authorizeAdmin, isAuthenticated } from "../middlewares/auth.js";
 
 const router = express.Router();
 router.get(
-  "/googlelogin",
+  "/google",
   passport.authenticate("google", {
     scope: ["profile"],
   })
 );
+
 router.get(
   "/login",
   passport.authenticate("google", {

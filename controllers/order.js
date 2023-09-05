@@ -4,40 +4,9 @@ import { Payment } from "../models/Payment.js";
 import ErrorHandler from "../utils/ErrorHandler.js";
 import { instance } from "../server.js";
 import crypto from "crypto";
+import { log } from "console";
 
 export const placeOrder = asyncError(async (req, res, next) => {
-  const {
-    shippingInfo,
-    orderItems,
-    paymentMethod,
-    itemsPrice,
-    taxPrice,
-    shippingCharges,
-    totalAmount,
-  } = req.body;
-
-  const user = "req.user._id";
-
-  const orderOptions = {
-    shippingInfo,
-    orderItems,
-    paymentMethod,
-    itemsPrice,
-    taxPrice,
-    shippingCharges,
-    totalAmount,
-    user,
-  };
-
-  await Order.create(orderOptions);
-
-  res.status(201).json({
-    success: true,
-    message: "Order Placed Successfully via Cash On Delivery",
-  });
-});
-
-export const placeOrderOnline = asyncError(async (req, res, next) => {
   const {
     shippingInfo,
     orderItems,
@@ -61,17 +30,51 @@ export const placeOrderOnline = asyncError(async (req, res, next) => {
     user,
   };
 
-  const options = {
-    amount: Number(totalAmount) * 100,
-    currency: "INR",
-  };
-  const order = await instance.orders.create(options);
+  await Order.create(orderOptions);
 
   res.status(201).json({
     success: true,
-    order,
-    orderOptions,
+    message: "Order Placed Successfully via Cash On Delivery",
   });
+});
+
+export const placeOrderOnline = asyncError(async (req, res, next) => {
+  
+    const {
+      shippingInfo,
+      orderItems,
+      paymentMethod,
+      itemsPrice,
+      taxPrice,
+      shippingCharges,
+      totalAmount,
+    } = req.body;
+
+    const user = req.user._id;
+
+    const orderOptions = {
+      shippingInfo,
+      orderItems,
+      paymentMethod,
+      itemsPrice,
+      taxPrice,
+      shippingCharges,
+      totalAmount,
+      user,
+    };
+
+    const options = {
+      amount: Number(totalAmount) * 100,
+      currency: "INR",
+    };
+    const order = await instance.orders.create(options);
+
+    res.status(201).json({
+      success: true,
+      order,
+      orderOptions,
+    });
+  
 });
 
 export const paymentVerification = asyncError(async (req, res, next) => {
@@ -113,7 +116,8 @@ export const paymentVerification = asyncError(async (req, res, next) => {
   }
 });
 
-export const getMyOrders = asyncError(async (req, res, next) => {
+export const getMyOrders = async (req, res, next) => {
+try {
   const orders = await Order.find({
     user: req.user._id,
   }).populate("user", "name");
@@ -121,11 +125,13 @@ export const getMyOrders = asyncError(async (req, res, next) => {
     success: true,
     orders,
   });
-});
-
+} catch (error) {
+  console.log(error);
+}
+};
 export const getOrderDetails = asyncError(async (req, res, next) => {
   const order = await Order.findById(req.params.id).populate("user", "name");
-    
+
   if (!order) return next(new ErrorHandler("Invalid Order Id", 404));
 
   res.status(200).json({

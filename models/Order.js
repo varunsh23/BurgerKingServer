@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const schema = new mongoose.Schema({
   shippingInfo: {
-    hNo: {
+    address: {
       type: String,
       required: true,
     },
